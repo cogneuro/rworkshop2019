@@ -15,52 +15,68 @@ head(SS)
 tail(SS)
 
 pacman::p_load(psych)
-?
+headTail(SS)
 
 # 3. 자료 유형
 str(SS)
+summary(SS)
 
 pacman::p_load(tidyverse)
-?
+glimpse(SS)
 
 # 4. 참가자는 몇 명일까?
 SS$SID
-?(SS)
-??(SS)
+unique(SS$SID)
+length(unique(SS$SID))
 
 # 5. 1번 참가자의 첫 시행 자료를 추출하세요.
-?
+SS[1,]
 
 # 6. 1번 참가자의 반응시간을 추출하세요.
 SS$RT[SS$SID==1]
-?
-  
+
+SS[SS$SID==2 & SS$Trial==2,]
+
 # 7. 1번 참가자의 정확율을 계산하세요.
-?
+unique(SS$Corr)
+
+mean(SS$Corr[SS$SID==1])
 
 
 # 8. 각 참가자들의 정확율을 계산하세요.
 s.acc <- double()
 xsn <- unique(SS$SID)
 for (x in 1:length(unique(SS$SID))){
-  s.acc[x] <- mean(SS$Corr[SS$SID==xsn[x]])
+  s.acc[x] <- mean(SS$Pref[SS$SID==xsn[x]])
 }
 s.acc
 
 # 9. 전체 시행 중 참가자가 응답하지 않은 비율은?
+1-mean(SS$Corr)
 
-  
 # 10. 선호도(0=dislike, 1=like) 변수를 만드세요.
-ifelse
-# SS$Pref <- ifelse(SS$Resp==1,1,0)
+
+unique(SS$Resp)
+
+SS$Pref <- ifelse(SS$Resp==1,1,0)
+glimpse(SS)
 
 # 11. 각 참가자들의 선호도를 계산하세요.
-hist
-boxplot
+a.pref <- double()
+xsn <- unique(SS$SID)
+for (x in 1:length(unique(SS$SID))){
+  a.pref[x] <- mean(SS$Pref[SS$SID==xsn[x]])
+}
+a.pref
+
+hist(a.pref)
+boxplot(a.pref, ylim=c(0,1))
 
 
 # 12. 친숙성 요인과 반복 요인을 확인하세요.
-table
+table(SS$Familiarity, SS$SID)
+table(SS$Repetition, SS$SID)
+
 
 # 13. 네 가지 조건별 선호도를 계산하세요.
 
@@ -107,26 +123,4 @@ apa_beeplot(data = SS,
                                x = "topright", inset = 0.05),
             las=1)
 
-# 17. ANOVA를 합시다.
-df.long <- gather(df.con.pref, "Repetition", "Preference", -c("ID", "Familiarity"))
-
-fit <- aov(Preference ~ Familiarity*Repetition + Error(ID/Repetition), df.long)
-summary(fit)
-
-
-
-pacman::p_load(afex)
-
-
-# 18. T-Test를 합시다. 
-
-
-
-
-
-
-
-
-
-
-  
+#-------EOF.
