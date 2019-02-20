@@ -47,10 +47,10 @@ tot.pref <- matrix(NA, nrow = 4, ncol = 3)
 tot.pref[,1] <- c("Words","Words","Pseudowords","Pseudowords")
 tot.pref[,2] <- c("Repeated","Unrepeated","Repeated","Unrepeated")
 
-tot.pref[1,3] <- ?
-tot.pref[2,3] <- ?
-tot.pref[3,3] <- ?
-tot.pref[4,3] <- ?
+tot.pref[1,3] <- mean(df.pref$Repeated[df.pref$Familiarity=="Words"])
+tot.pref[2,3] <- mean(df.pref$Unrepeated[df.pref$Familiarity=="Words"])
+tot.pref[3,3] <- mean(df.pref$Repeated[df.pref$Familiarity=="Pseudowords"])
+tot.pref[4,3] <- mean(df.pref$Unrepeated[df.pref$Familiarity=="Pseudowords"])
 
 tot.pref
 
@@ -95,29 +95,32 @@ sum1 <- SS %>% group_by(SID, Familiarity, Repetition) %>%
   ungroup
 
 # 6. 참가자 전체의 조건별 선호도 평균을 다시 계산하세요.
-?
-
-
+sum2 <- sum1 %>% 
+  group_by(Familiarity, Repetition) %>%
+  summarise(mean.Preference = mean(Pref)) %>% 
+  ungroup
 
 # 7. 2x2 mixed ANOVA
 # https://cran.r-project.org/web/packages/afex/index.html
 pacman::p_load(afex)
 
-aov_ez()
-
+aov.pref <- aov_ez(id = "SID", dv = "Pref", data = SS, 
+                      between = "Familiarity", within = "Repetition")
+anova(aov.pref)
+anova(aov.pref, es = "pes")
 
 # 8. ANOVA type?
 afex_options("type") # Type III
 
-
 # 9. Post-hoc을 해봅시다. 
-t.test()
-
+t.test(Pref ~ Repetition, sum1 %>% filter(Familiarity=="Words"), paired = TRUE)
+t.test(Pref ~ Repetition, sum1 %>% filter(Familiarity=="Pseudowords"), paired = TRUE)
 
 # https://cran.r-project.org/web/packages/emmeans/index.html
 pacman::p_load(emmeans)
 
-
+( aov.pref.emm <- emmeans(aov.pref, pairwise ~ Repetition | Familiarity) )
+plot(aov.pref.emm, comparison = TRUE)
 
 # 10. 반응시간을 요약해보세요.
 cSS <- SS %>% filter(Corr ==1)
@@ -135,36 +138,73 @@ tSS <- SS %>% filter(RT > 200 & RT < 10000) %>%
   select(SID, Familiarity, Repetition, RT, ImgName)
 
 ## 11. Outlier로 제거된 시행의 비율은?
-
+100 - 100*nrow(tSS)/nrow(cSS)
 
 ## 12. 조건별 반응시간을 그림으로 그려보세요.
-
-
-
+apa_beeplot(data = tSS,
+            id="SID", dv="RT", factors=c("Familiarity", "Repetition"), 
+            dispersion = conf_int,
+            # ylim = c(0, 1),
+            xlab = "Pre-experimental Stimulus Familiarity",
+            ylab = "Response Time (msec)",
+            args_legend = list(title = 'Item Repetition',
+                               x = "bottom", inset = 0.05),
+            las=1)
 
 # 13. 반응시간에 대하여 Linear Mixed Modeling을 해보자.
 # https://www.sciencedirect.com/science/article/pii/S0749596X07001398
 # https://cran.r-project.org/web/packages/afex/vignettes/introduction-mixed-models.pdf
+# https://www.sciencedirect.com/science/article/pii/S0022249602000287
 pacman::p_load(lme4)
 lmer()
 
+rt.full <- lmer(RT ~ Familiarity*Repetition + (1|SID) + (1|ImgName), tSS,
+                control = lmerControl(optimizer = "bobyqa"))
+summary(rt.full)
 
 # https://stats.idre.ucla.edu/spss/faq/coding-systems-for-categorical-variables-in-regression-analysis-2/
 afex::set_sum_contrasts() # sum-to-zero coding
 
+rt.red1 <- lmer(RT ~ Familiarity+Repetition + (1|SID) + (1|ImgName), tSS,
+                control = lmerControl(optimizer = "bobyqa"))
+rt.red2 <- lmer(RT ~ Repetition + (1|SID) + (1|ImgName), tSS,
+                control = lmerControl(optimizer = "bobyqa"))
+rt.red3 <- lmer(RT ~ 1 + (1|SID) + (1|ImgName), tSS,
+                control = lmerControl(optimizer = "bobyqa"))
+anova(rt.full, rt.red1, rt.red2)
+
 
 pacman::p_load(afex)
-mixed()
+rt.m1 <- mixed(RT ~ Familiarity*Repetition + (1|SID) + (1|ImgName), tSS)
+rt.m2 <- mixed(RT ~ Familiarity*Repetition + (Repetition|SID) + (1|ImgName), tSS)
 
+anova(rt.m1, rt.m2)
 
 # 14. 선호도에 대하여 generalized Linear Mixed Modeling을 해보자.
 # https://www.sciencedirect.com/science/article/pii/S0749596X07001337
 # https://ko.wikipedia.org/wiki/로지스틱_회귀
 
-glmer()
+conf.full <- glmer(Pref ~ Familiarity*Repetition + (Repetition|SID) + (1|ImgName), 
+                    SS, family=binomial(link="logit"))
+conf.red1 <- glmer(Pref ~ Familiarity+Repetition + (Repetition|SID) + (1|ImgName), 
+                   SS, family=binomial(link="logit"))
+conf.red2 <- glmer(Pref ~ Repetition + (Repetition|SID) + (1|ImgName), 
+                   SS, family=binomial(link="logit"))
+conf.red3 <- glmer(Pref ~ 1 + (Repetition|SID) + (1|ImgName), 
+                   SS, family=binomial(link="logit"))
+anova(conf.full, conf.red1, conf.red2, conf.red3)
 
 
 conf.m1 <- mixed(Pref ~ Familiarity*Repetition + (1|SID) + (1|ImgName), 
             SS, method = "LRT", family=binomial(link="logit"))
+conf.m2 <- mixed(Pref ~ Familiarity*Repetition + (Repetition|SID) + (1|ImgName), 
+                 SS, method = "LRT", family=binomial(link="logit"))
+
+anova(conf.m1, conf.m2)
 
 # 15. GLMM에 대해 Post-hoc을 해보자.
+( conf.m1.emm <- emmeans(conf.m2, pairwise ~ Repetition | Familiarity) )
+( conf.m1.emm <- emmeans(conf.m2, pairwise ~ Repetition | Familiarity, type = "response") )
+plot(aov.pref.emm, comparison = TRUE)
+
+#------------EOF.
