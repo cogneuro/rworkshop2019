@@ -149,6 +149,9 @@ pacman::p_load(lme4)
 lmer()
 
 
+# https://stats.idre.ucla.edu/spss/faq/coding-systems-for-categorical-variables-in-regression-analysis-2/
+afex::set_sum_contrasts() # sum-to-zero coding
+
 
 pacman::p_load(afex)
 mixed()
