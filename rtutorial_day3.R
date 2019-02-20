@@ -157,7 +157,7 @@ pacman::p_load(afex)
 mixed()
 
 
-# 14. 선호도에 대하여 Linear Mixed Modeling을 해보자.
+# 14. 선호도에 대하여 generalized Linear Mixed Modeling을 해보자.
 # https://www.sciencedirect.com/science/article/pii/S0749596X07001337
 # https://ko.wikipedia.org/wiki/로지스틱_회귀
 
@@ -167,3 +167,4 @@ glmer()
 conf.m1 <- mixed(Pref ~ Familiarity*Repetition + (1|SID) + (1|ImgName), 
             SS, method = "LRT", family=binomial(link="logit"))
 
+# 15. GLMM에 대해 Post-hoc을 해보자.
