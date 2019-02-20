@@ -145,6 +145,11 @@ tSS <- SS %>% filter(RT > 200 & RT < 10000) %>%
 # 13. 반응시간에 대하여 Linear Mixed Modeling을 해보자.
 # https://www.sciencedirect.com/science/article/pii/S0749596X07001398
 # https://cran.r-project.org/web/packages/afex/vignettes/introduction-mixed-models.pdf
+pacman::p_load(lme4)
+lmer()
+
+
+
 pacman::p_load(afex)
 mixed()
 
@@ -152,6 +157,10 @@ mixed()
 # 14. 선호도에 대하여 Linear Mixed Modeling을 해보자.
 # https://www.sciencedirect.com/science/article/pii/S0749596X07001337
 # https://ko.wikipedia.org/wiki/로지스틱_회귀
+
+glmer()
+
+
 conf.m1 <- mixed(Pref ~ Familiarity*Repetition + (1|SID) + (1|ImgName), 
             SS, method = "LRT", family=binomial(link="logit"))
 
