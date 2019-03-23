@@ -3,7 +3,7 @@ setwd("~/Documents/GitHub/rworkshop2019/")
 pacman::p_load(tidyverse)
 pacman::p_load_gh("crsh/papaja", "thomasp85/patchwork")
 
-DD <- read.csv("demodata_antipriming.csv", header = T)
+DD <- read.csv("demodata_ANTPRM.csv", header = T)
 
 length(unique(DD$SID)) # N = 36
 DD$SID <- factor(DD$SID)
